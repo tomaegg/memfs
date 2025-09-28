@@ -1,9 +1,11 @@
+#include <atomic>
 #include <cstring>
 #include <fcntl.h>
 #include <memory>
 #include <optional>
 #include <stdlib.h>
 #include <string>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <unordered_map>
 #include <vector>
@@ -46,27 +48,31 @@ struct MemNode {
 private:
   std::string name;
   std::unordered_map<std::string, std::unique_ptr<MemNode>> files;
-  stat status;
+  struct stat status;
 };
 
 struct MemIdx {
   MemIdx();
-  std::optional<stat> status(std::string const &);
+  std::optional<struct stat> status(std::string const &);
 
 private:
   std::optional<MemNode *> get_node(std::string const &);
+  size_t alloc_ino() { return this->next_ino.fetch_add(1); };
 
   std::unique_ptr<MemNode> root;
+  mutable std::atomic<size_t> next_ino;
+  std::unordered_map<size_t, MemNode *> inode_map;
 };
 
-MemIdx::MemIdx() : root(std::make_unique<MemNode>()) {
-  std::memset(&this->root->status, 0, sizeof(stat));
+MemIdx::MemIdx() : root(std::make_unique<MemNode>()), next_ino(1) {
+  std::memset(&this->root->status, 0, sizeof(this->root->status));
 
   this->root->name = "/";
 
-  stat &s = this->root->status;
+  struct stat &s = this->root->status;
 
-  s.st_mode = S_IFDIR | 0755;
+  s.st_ino = this->alloc_ino();
+  s.st_mode = S_IFDIR | S_IREAD | S_IWRITE | S_IEXEC;
   s.st_uid = getuid();
   s.st_gid = getgid();
   s.st_size = 4096;
@@ -90,7 +96,7 @@ std::optional<MemNode *> MemIdx::get_node(std::string const &path) {
   return p;
 }
 
-std::optional<stat> MemIdx::status(std::string const &path) {
+std::optional<struct stat> MemIdx::status(std::string const &path) {
   auto n = this->get_node(path);
   if (n.has_value()) {
     return n.value()->status;
