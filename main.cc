@@ -12,5 +12,5 @@ int main(int argc, char *argv[]) {
   }
 
   if ((argc < 2) || (argv[argc - 1][0] == '-'))
-    usage(argv[0]);
+    memfs::usage(argv[0]);
 }

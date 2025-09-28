@@ -20,7 +20,10 @@ target_compile_definitions(
   PRIVATE _FILE_OFFSET_BITS=64
 )
 
-
+target_compile_options(
+  memfs
+  PRIVATE -Wall
+)
 target_include_directories(memfs PUBLIC ${FUSE_INCLUDE_DIRS})
 
 target_link_libraries(memfs PUBLIC ${FUSE_LIBRARIES})
