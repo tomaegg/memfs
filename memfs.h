@@ -7,23 +7,35 @@
 #include <string>
 #include <sys/stat.h>
 #include <unordered_map>
+#include <vector>
 
 namespace memfs {
 
 struct MemIdx;
 
+using store_type = std::vector<std::byte>;
+
 struct MemNode {
   friend struct MemIdx;
 
-private:
-  std::string name;
+  MemNode() : store(std::make_shared<store_type>()) {}
+
+  std::shared_ptr<store_type> store;
   std::unordered_map<std::string, std::unique_ptr<MemNode>> files;
+  std::string name;
   struct stat status;
+};
+
+struct Fd {
+  Fd(std::shared_ptr<store_type> ptr) : store(ptr) {};
+
+  std::shared_ptr<store_type> store;
 };
 
 struct MemIdx {
   MemIdx();
   std::optional<struct stat> status(std::string const &);
+  std::optional<struct MemNode *> node(std::string const &);
 
 private:
   std::optional<MemNode *> get_node(std::string const &);

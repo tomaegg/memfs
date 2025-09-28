@@ -75,4 +75,10 @@ std::optional<struct stat> MemIdx::status(std::string const &path) {
   }
   return std::nullopt;
 }
+
+std::optional<struct MemNode *> MemIdx::node(std::string const &path) {
+  auto n = this->get_node(path);
+  return n;
+}
+
 }; // namespace memfs
