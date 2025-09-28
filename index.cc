@@ -1,13 +1,7 @@
-#include <atomic>
+
+#include "memfs.h"
 #include <cstring>
-#include <fcntl.h>
-#include <memory>
-#include <optional>
-#include <stdlib.h>
-#include <string>
-#include <sys/stat.h>
 #include <unistd.h>
-#include <unordered_map>
 #include <vector>
 
 // return values ignore empty string
@@ -40,29 +34,7 @@ std::vector<std::string> split(std::string const &s,
   return ret;
 }
 
-struct MemIdx;
-
-struct MemNode {
-  friend struct MemIdx;
-
-private:
-  std::string name;
-  std::unordered_map<std::string, std::unique_ptr<MemNode>> files;
-  struct stat status;
-};
-
-struct MemIdx {
-  MemIdx();
-  std::optional<struct stat> status(std::string const &);
-
-private:
-  std::optional<MemNode *> get_node(std::string const &);
-  size_t alloc_ino() { return this->next_ino.fetch_add(1); };
-
-  std::unique_ptr<MemNode> root;
-  mutable std::atomic<size_t> next_ino;
-  std::unordered_map<size_t, MemNode *> inode_map;
-};
+namespace memfs {
 
 MemIdx::MemIdx() : root(std::make_unique<MemNode>()), next_ino(1) {
   std::memset(&this->root->status, 0, sizeof(this->root->status));
@@ -103,3 +75,4 @@ std::optional<struct stat> MemIdx::status(std::string const &path) {
   }
   return std::nullopt;
 }
+}; // namespace memfs
