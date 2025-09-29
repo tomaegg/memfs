@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.30)
 
-
 project(mem-fuse CXX)
 
 set(CMAKE_CXX_STANDARD 17)
