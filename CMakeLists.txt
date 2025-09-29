@@ -23,7 +23,7 @@ target_compile_definitions(
 
 target_compile_options(
   memfs
-  PRIVATE -Wall
+  PRIVATE -Wall -Werror
 )
 
 target_include_directories(memfs PUBLIC ${FUSE_INCLUDE_DIRS})
